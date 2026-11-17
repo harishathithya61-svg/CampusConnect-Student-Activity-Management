@@ -4,7 +4,7 @@ import io
 import jwt
 from datetime import datetime, timedelta, timezone
 from functools import wraps
-from flask import Flask, request, jsonify, send_file, Response
+from flask import Flask, request, jsonify, send_file, Response, send_from_directory
 from flask_cors import CORS
 from sqlalchemy import or_, desc, asc
 
@@ -624,6 +624,26 @@ def create_app(config_class=Config):
         return jsonify({
             'message': f"Cleared {deleted} student records from database.",
             'remaining_count': Student.query.count()
+        })
+
+    # =========================================================================
+    # STATIC FRONTEND SERVING (For Unified Production Hosting)
+    # =========================================================================
+    dist_dir = os.path.abspath(os.path.join(os.path.dirname(__file__), '..', 'frontend', 'dist'))
+
+    @app.route('/', defaults={'path': ''})
+    @app.route('/<path:path>')
+    def serve_frontend(path):
+        if path.startswith('api/'):
+            return jsonify({'error': 'Endpoint not found'}), 404
+        if path != "" and os.path.exists(os.path.join(dist_dir, path)):
+            return send_from_directory(dist_dir, path)
+        if os.path.exists(os.path.join(dist_dir, 'index.html')):
+            return send_from_directory(dist_dir, 'index.html')
+        return jsonify({
+            'application': 'CampusConnect API Server',
+            'status': 'online',
+            'message': 'API is live. Access /api/system/health for health check.'
         })
 
     return app

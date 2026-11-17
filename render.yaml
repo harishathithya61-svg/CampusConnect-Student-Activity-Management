@@ -1,0 +1,13 @@
+services:
+  - type: web
+    name: campusconnect
+    runtime: python
+    buildCommand: "./build.sh"
+    startCommand: "gunicorn run_backend:app"
+    envVars:
+      - key: PYTHON_VERSION
+        value: 3.11.9
+      - key: SECRET_KEY
+        generateValue: true
+      - key: FLASK_ENV
+        value: production
